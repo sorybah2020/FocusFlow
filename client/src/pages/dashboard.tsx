@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Link } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -68,6 +69,10 @@ export default function Dashboard() {
   const completedHabits = habits.filter(habit => habit.completed).length;
   const totalHabits = habits.length;
 
+  // Get the first incomplete task for the focus timer
+  const currentFocusTask = tasks.find(task => !task.completed);
+  const focusTaskTitle = currentFocusTask ? currentFocusTask.title : "Focus Session";
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newTask.title.trim()) return;
@@ -99,7 +104,7 @@ export default function Dashboard() {
         {/* Left Column */}
         <div className="lg:col-span-2 space-y-8">
           {/* Focus Timer */}
-          <FocusTimerWidget taskTitle="Math Assignment Review" />
+          <FocusTimerWidget taskTitle={focusTaskTitle} />
 
           {/* Today's Tasks */}
           <Card data-testid="todays-tasks">
@@ -199,18 +204,27 @@ export default function Dashboard() {
             <CardContent className="p-6">
               <h3 className="text-lg font-semibold text-foreground mb-4">Quick Actions</h3>
               <div className="space-y-3">
-                <Button className="w-full" data-testid="button-start-focus">
-                  <Play className="mr-2 h-4 w-4" />
-                  Start Focus Session
-                </Button>
-                <Button variant="secondary" className="w-full" data-testid="button-take-break">
+                <Link href="/focus-timer">
+                  <Button className="w-full" data-testid="button-start-focus">
+                    <Play className="mr-2 h-4 w-4" />
+                    Start Focus Session
+                  </Button>
+                </Link>
+                <Button 
+                  variant="secondary" 
+                  className="w-full" 
+                  data-testid="button-take-break"
+                  onClick={() => toast({ title: "Break time! 🌟", description: "Take a moment to relax and recharge." })}
+                >
                   <Coffee className="mr-2 h-4 w-4" />
                   Take a Break
                 </Button>
-                <Button variant="secondary" className="w-full" data-testid="button-quick-note">
-                  <StickyNote className="mr-2 h-4 w-4" />
-                  Quick Note
-                </Button>
+                <Link href="/notes">
+                  <Button variant="secondary" className="w-full" data-testid="button-quick-note">
+                    <StickyNote className="mr-2 h-4 w-4" />
+                    Quick Note
+                  </Button>
+                </Link>
               </div>
             </CardContent>
           </Card>
