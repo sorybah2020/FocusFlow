@@ -45,8 +45,13 @@ export default function Dashboard() {
       setNewTask({ title: "", description: "", priority: "medium", dueDate: "" });
       toast({ title: "Task created successfully!" });
     },
-    onError: () => {
-      toast({ title: "Failed to create task", variant: "destructive" });
+    onError: (error: any) => {
+      console.error("Task creation failed:", error);
+      toast({ 
+        title: "Failed to create task", 
+        description: error?.message || "Unknown error",
+        variant: "destructive" 
+      });
     },
   });
 
@@ -68,7 +73,9 @@ export default function Dashboard() {
     if (!newTask.title.trim()) return;
 
     createTaskMutation.mutate({
-      ...newTask,
+      title: newTask.title.trim(),
+      description: newTask.description.trim() || null,
+      priority: newTask.priority,
       dueDate: newTask.dueDate ? new Date(newTask.dueDate) : null,
     });
   };
