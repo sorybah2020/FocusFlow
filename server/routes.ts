@@ -43,24 +43,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/tasks", async (req, res) => {
     try {
-      console.log("Received task data:", req.body);
-      
       // Convert dueDate string back to Date object if it exists
       const fullTaskData = { 
         ...req.body, 
         userId: SAMPLE_USER_ID,
         dueDate: req.body.dueDate ? new Date(req.body.dueDate) : null
       };
-      console.log("Full task data with userId:", fullTaskData);
       
       const taskData = insertTaskSchema.parse(fullTaskData);
-      console.log("Parsed task data:", taskData);
-      
       const task = await storage.createTask(taskData);
       res.status(201).json(task);
     } catch (error) {
-      console.error("Task creation error:", error);
-      res.status(400).json({ message: "Invalid task data", error: error.message });
+      res.status(400).json({ message: "Invalid task data" });
     }
   });
 
