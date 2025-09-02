@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import Navigation from "@/components/navigation";
 import Dashboard from "@/pages/dashboard";
 import Tasks from "@/pages/tasks";
+import Calendar from "@/pages/calendar";
 import FocusTimer from "@/pages/focus-timer";
 import Notes from "@/pages/notes";
 import Progress from "@/pages/progress";
@@ -16,6 +17,7 @@ function Router() {
     <Switch>
       <Route path="/" component={Dashboard} />
       <Route path="/tasks" component={Tasks} />
+      <Route path="/calendar" component={Calendar} />
       <Route path="/focus-timer" component={FocusTimer} />
       <Route path="/notes" component={Notes} />
       <Route path="/progress" component={Progress} />

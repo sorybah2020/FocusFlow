@@ -8,6 +8,7 @@ export default function Navigation() {
   const navItems = [
     { href: "/", label: "Dashboard", active: location === "/" },
     { href: "/tasks", label: "Tasks", active: location === "/tasks" },
+    { href: "/calendar", label: "Calendar", active: location === "/calendar" },
     { href: "/focus-timer", label: "Focus Timer", active: location === "/focus-timer" },
     { href: "/notes", label: "Notes", active: location === "/notes" },
     { href: "/progress", label: "Progress", active: location === "/progress" },
