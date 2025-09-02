@@ -118,6 +118,8 @@ export class MemStorage implements IStorage {
       ...insertTask, 
       id, 
       completed: false,
+      description: insertTask.description || null,
+      dueDate: insertTask.dueDate || null,
       createdAt: new Date() 
     };
     this.tasks.set(id, task);
@@ -147,6 +149,7 @@ export class MemStorage implements IStorage {
     const session: FocusSession = { 
       ...insertSession, 
       id, 
+      taskId: insertSession.taskId || null,
       completedAt: new Date() 
     };
     this.focusSessions.set(id, session);
@@ -168,6 +171,7 @@ export class MemStorage implements IStorage {
     const note: Note = { 
       ...insertNote, 
       id, 
+      tags: insertNote.tags || null,
       createdAt: now,
       updatedAt: now 
     };
@@ -203,6 +207,7 @@ export class MemStorage implements IStorage {
     const habit: Habit = { 
       ...insertHabit, 
       id, 
+      completed: insertHabit.completed || false,
       date: new Date() 
     };
     this.habits.set(id, habit);

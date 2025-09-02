@@ -272,7 +272,7 @@ export default function Notes() {
                   </div>
                 )}
                 <p className="text-xs text-muted-foreground mt-3" data-testid={`text-note-date-${note.id}`}>
-                  {new Date(note.updatedAt).toLocaleDateString()}
+                  {note.updatedAt ? new Date(note.updatedAt).toLocaleDateString() : 'No date'}
                 </p>
               </CardContent>
             </Card>

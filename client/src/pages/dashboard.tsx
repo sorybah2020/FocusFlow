@@ -1,20 +1,53 @@
-import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Plus, Play, Coffee, StickyNote } from "lucide-react";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 import QuickStats from "@/components/quick-stats";
 import FocusTimerWidget from "@/components/focus-timer-widget";
 import TaskItem from "@/components/task-item";
 import type { User, Task, Habit } from "@shared/schema";
 
 export default function Dashboard() {
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [newTask, setNewTask] = useState({
+    title: "",
+    description: "",
+    priority: "medium",
+    dueDate: "",
+  });
+
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
   const { data: user } = useQuery<User>({ queryKey: ["/api/users/current"] });
   const { data: tasks = [] } = useQuery<Task[]>({ queryKey: ["/api/tasks"] });
   const { data: habits = [] } = useQuery<Habit[]>({ 
     queryKey: ["/api/habits"], 
     refetchInterval: 30000 
+  });
+
+  const createTaskMutation = useMutation({
+    mutationFn: async (taskData: any) => {
+      const response = await apiRequest("POST", "/api/tasks", taskData);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/tasks"] });
+      setIsAddDialogOpen(false);
+      setNewTask({ title: "", description: "", priority: "medium", dueDate: "" });
+      toast({ title: "Task created successfully!" });
+    },
+    onError: () => {
+      toast({ title: "Failed to create task", variant: "destructive" });
+    },
   });
 
   const todaysTasks = tasks.slice(0, 4); // Show first 4 tasks
@@ -29,6 +62,16 @@ export default function Dashboard() {
 
   const completedHabits = habits.filter(habit => habit.completed).length;
   const totalHabits = habits.length;
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newTask.title.trim()) return;
+
+    createTaskMutation.mutate({
+      ...newTask,
+      dueDate: newTask.dueDate ? new Date(newTask.dueDate) : null,
+    });
+  };
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" data-testid="dashboard">
@@ -56,10 +99,75 @@ export default function Dashboard() {
             <CardContent className="p-6">
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-xl font-semibold text-foreground">Today's Tasks</h3>
-                <Button data-testid="button-add-task">
-                  <Plus className="mr-2 h-4 w-4" />
-                  Add Task
-                </Button>
+                <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button data-testid="button-add-task">
+                      <Plus className="mr-2 h-4 w-4" />
+                      Add Task
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent data-testid="dialog-add-task">
+                    <DialogHeader>
+                      <DialogTitle>Create New Task</DialogTitle>
+                    </DialogHeader>
+                    <form onSubmit={handleSubmit} className="space-y-4">
+                      <div>
+                        <Input
+                          placeholder="Task title"
+                          value={newTask.title}
+                          onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
+                          data-testid="input-task-title"
+                        />
+                      </div>
+                      <div>
+                        <Textarea
+                          placeholder="Description (optional)"
+                          value={newTask.description}
+                          onChange={(e) => setNewTask({ ...newTask, description: e.target.value })}
+                          data-testid="textarea-task-description"
+                        />
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <Select
+                          value={newTask.priority}
+                          onValueChange={(value) => setNewTask({ ...newTask, priority: value })}
+                        >
+                          <SelectTrigger data-testid="select-task-priority">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="low">Low Priority</SelectItem>
+                            <SelectItem value="medium">Medium Priority</SelectItem>
+                            <SelectItem value="urgent">Urgent</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <Input
+                          type="datetime-local"
+                          value={newTask.dueDate}
+                          onChange={(e) => setNewTask({ ...newTask, dueDate: e.target.value })}
+                          data-testid="input-task-due-date"
+                        />
+                      </div>
+                      <div className="flex justify-end space-x-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => setIsAddDialogOpen(false)}
+                          data-testid="button-cancel-task"
+                        >
+                          Cancel
+                        </Button>
+                        <Button 
+                          type="submit" 
+                          disabled={createTaskMutation.isPending}
+                          data-testid="button-create-task"
+                        >
+                          {createTaskMutation.isPending ? "Creating..." : "Create Task"}
+                        </Button>
+                      </div>
+                    </form>
+                  </DialogContent>
+                </Dialog>
               </div>
 
               <div className="space-y-4">
@@ -186,7 +294,7 @@ export default function Dashboard() {
                       <div className="flex items-center space-x-3">
                         <input 
                           type="checkbox" 
-                          checked={habit.completed}
+                          checked={habit.completed || false}
                           readOnly
                           className="w-4 h-4 text-primary rounded border-border focus:ring-ring"
                         />

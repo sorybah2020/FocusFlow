@@ -85,7 +85,7 @@ export default function TaskItem({ task }: TaskItemProps) {
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <Checkbox
-              checked={isCompleted}
+              checked={isCompleted || false}
               onCheckedChange={handleToggleComplete}
               data-testid={`checkbox-task-${task.id}`}
             />
