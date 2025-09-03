@@ -11,6 +11,7 @@ import FocusTimer from "@/pages/focus-timer";
 import Notes from "@/pages/notes";
 import Progress from "@/pages/progress";
 import Landing from "@/pages/landing";
+import Login from "@/pages/login";
 import NotFound from "@/pages/not-found";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -22,6 +23,8 @@ function Router() {
       {!isAuthenticated ? (
         <>
           <Route path="/" component={Landing} />
+          <Route path="/login" component={Login} />
+          <Route path="/signup" component={Login} />
           <Route component={Landing} />
         </>
       ) : (

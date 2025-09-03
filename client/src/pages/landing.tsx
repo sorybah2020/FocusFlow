@@ -15,7 +15,7 @@ export default function Landing() {
             <span className="text-xl font-bold text-foreground">FocusFlow</span>
           </div>
           <Button 
-            onClick={() => window.location.href = '/api/login'}
+            onClick={() => window.location.href = '/login'}
             className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
             data-testid="button-login"
           >
@@ -40,7 +40,7 @@ export default function Landing() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button 
               size="lg" 
-              onClick={() => window.location.href = '/api/login'}
+              onClick={() => window.location.href = '/signup'}
               className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 px-8 py-6 text-lg"
               data-testid="button-get-started"
             >
@@ -188,7 +188,7 @@ export default function Landing() {
             <Button 
               size="lg"
               variant="secondary"
-              onClick={() => window.location.href = '/api/login'}
+              onClick={() => window.location.href = '/signup'}
               className="px-8 py-6 text-lg bg-white text-blue-600 hover:bg-gray-100"
               data-testid="button-start-journey"
             >
