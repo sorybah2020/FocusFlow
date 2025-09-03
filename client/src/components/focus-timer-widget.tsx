@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
-import { Pause, SkipForward, Edit } from "lucide-react";
+import { Pause, SkipForward, Edit, Settings } from "lucide-react";
 import type { Task } from "@shared/schema";
 
 interface FocusTimerWidgetProps {
@@ -15,12 +15,15 @@ interface FocusTimerWidgetProps {
 }
 
 export default function FocusTimerWidget({ taskTitle, onComplete, onTaskChange }: FocusTimerWidgetProps) {
+  const [sessionDuration, setSessionDuration] = useState(25); // Duration in minutes
   const [timeRemaining, setTimeRemaining] = useState(25 * 60); // 25 minutes in seconds
   const [isActive, setIsActive] = useState(false);
   const [currentSession, setCurrentSession] = useState(1);
   const [totalSessions] = useState(4);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isSettingsDialogOpen, setIsSettingsDialogOpen] = useState(false);
   const [selectedTaskId, setSelectedTaskId] = useState<string>("");
+  const [tempDuration, setTempDuration] = useState(25);
 
   const { data: tasks = [] } = useQuery<Task[]>({ queryKey: ["/api/tasks"] });
 
@@ -45,7 +48,7 @@ export default function FocusTimerWidget({ taskTitle, onComplete, onTaskChange }
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const progress = ((25 * 60 - timeRemaining) / (25 * 60)) * 100;
+  const progress = ((sessionDuration * 60 - timeRemaining) / (sessionDuration * 60)) * 100;
   const circumference = 2 * Math.PI * 15.9155;
   const strokeDasharray = `${(progress / 100) * circumference}, ${circumference}`;
 
@@ -54,9 +57,21 @@ export default function FocusTimerWidget({ taskTitle, onComplete, onTaskChange }
   };
 
   const skipBreak = () => {
-    setTimeRemaining(25 * 60);
+    setTimeRemaining(sessionDuration * 60);
     setIsActive(false);
     setCurrentSession(prev => Math.min(prev + 1, totalSessions));
+  };
+
+  const handleDurationChange = () => {
+    setSessionDuration(tempDuration);
+    setTimeRemaining(tempDuration * 60);
+    setIsActive(false);
+    setIsSettingsDialogOpen(false);
+  };
+
+  const resetTimer = () => {
+    setTimeRemaining(sessionDuration * 60);
+    setIsActive(false);
   };
 
   const handleTaskChange = () => {
@@ -77,6 +92,59 @@ export default function FocusTimerWidget({ taskTitle, onComplete, onTaskChange }
         <div className="flex items-center justify-between mb-6">
           <h3 className="text-xl font-semibold text-foreground">Focus Session</h3>
           <div className="flex items-center space-x-2">
+            <Dialog open={isSettingsDialogOpen} onOpenChange={setIsSettingsDialogOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="sm" data-testid="button-timer-settings">
+                  <Settings className="h-4 w-4" />
+                </Button>
+              </DialogTrigger>
+              <DialogContent data-testid="dialog-timer-settings">
+                <DialogHeader>
+                  <DialogTitle>Timer Settings</DialogTitle>
+                  <DialogDescription>
+                    Customize your focus session duration.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-sm font-medium text-foreground mb-2 block">
+                      Focus Session Duration:
+                    </label>
+                    <Select value={tempDuration.toString()} onValueChange={(value) => setTempDuration(parseInt(value))}>
+                      <SelectTrigger data-testid="select-session-duration">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="15">15 minutes</SelectItem>
+                        <SelectItem value="20">20 minutes</SelectItem>
+                        <SelectItem value="25">25 minutes (Pomodoro)</SelectItem>
+                        <SelectItem value="30">30 minutes</SelectItem>
+                        <SelectItem value="45">45 minutes</SelectItem>
+                        <SelectItem value="60">60 minutes</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex justify-end space-x-2">
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setTempDuration(sessionDuration);
+                        setIsSettingsDialogOpen(false);
+                      }}
+                      data-testid="button-cancel-settings"
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      onClick={handleDurationChange}
+                      data-testid="button-save-settings"
+                    >
+                      Apply Changes
+                    </Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
             <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
               <DialogTrigger asChild>
                 <Button variant="outline" size="sm" data-testid="button-edit-focus-task">
@@ -189,15 +257,16 @@ export default function FocusTimerWidget({ taskTitle, onComplete, onTaskChange }
             data-testid="button-toggle-timer"
           >
             <Pause className="mr-2 h-4 w-4" />
-            {isActive ? "Pause" : "Resume"}
+            {isActive ? "Pause" : "Start"}
           </Button>
           <Button
             variant="secondary"
-            onClick={skipBreak}
-            data-testid="button-skip-break"
+            onClick={resetTimer}
+            disabled={isActive}
+            data-testid="button-reset-timer"
           >
             <SkipForward className="mr-2 h-4 w-4" />
-            Skip Break
+            Reset
           </Button>
         </div>
       </CardContent>
