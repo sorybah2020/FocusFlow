@@ -66,15 +66,6 @@ function FinalApp() {
                     </div>
                   </div>
                 </Route>
-                <Route>
-                  <div className="min-h-screen flex items-center justify-center bg-background">
-                    <div className="text-center">
-                      <h1 className="text-2xl font-bold mb-4">Page not found</h1>
-                      <p className="text-muted-foreground mb-4">The page you're looking for doesn't exist.</p>
-                      <a href="/" className="text-primary hover:underline">Go to Dashboard</a>
-                    </div>
-                  </div>
-                </Route>
               </>
             )}
           </Switch>
