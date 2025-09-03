@@ -16,11 +16,11 @@ import NotFound from "@/pages/not-found";
 import { useAuth } from "@/hooks/useAuth";
 
 function Router() {
-  const { isAuthenticated, isLoading } = useAuth();
+  const authData = useAuth();
 
   return (
     <Switch>
-      {!isAuthenticated ? (
+      {!authData.isAuthenticated ? (
         <>
           <Route path="/" component={Landing} />
           <Route path="/login" component={Login} />
@@ -59,9 +59,9 @@ function App() {
 }
 
 function AuthenticatedLayout() {
-  const { isAuthenticated, isLoading } = useAuth();
+  const authData = useAuth();
 
-  if (isLoading) {
+  if (authData.isLoading) {
     return (
       <div className="min-h-screen bg-background text-foreground flex items-center justify-center">
         <div className="text-center">
@@ -74,7 +74,7 @@ function AuthenticatedLayout() {
 
   return (
     <>
-      {isAuthenticated && <Navigation />}
+      {authData.isAuthenticated && <Navigation />}
       <Router />
     </>
   );

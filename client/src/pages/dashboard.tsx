@@ -28,7 +28,20 @@ export default function Dashboard() {
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { data: user } = useQuery<User>({ queryKey: ["/api/auth/user"] });
+  // Get user data from localStorage instead of API
+  const [user, setUser] = useState<User | null>(null);
+  
+  useEffect(() => {
+    const savedUser = localStorage.getItem('focusflow_user');
+    if (savedUser) {
+      try {
+        setUser(JSON.parse(savedUser));
+      } catch (error) {
+        console.error('Error parsing user data:', error);
+        setUser(null);
+      }
+    }
+  }, []);
   const { data: tasks = [] } = useQuery<Task[]>({ queryKey: ["/api/tasks"] });
   const { data: habits = [] } = useQuery<Habit[]>({ 
     queryKey: ["/api/habits"], 
