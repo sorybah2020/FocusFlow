@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { ChevronLeft, ChevronRight, Plus, Calendar as CalendarIcon, Eye, Edit, Trash2 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
@@ -290,6 +290,9 @@ export default function Calendar() {
             <DialogTitle>
               Create Event for {selectedDate?.toLocaleDateString()}
             </DialogTitle>
+            <DialogDescription>
+              Add a new event or task for the selected date.
+            </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
@@ -357,6 +360,9 @@ export default function Calendar() {
             <DialogTitle>
               {selectedTask?.title}
             </DialogTitle>
+            <DialogDescription>
+              View and manage this event or task details.
+            </DialogDescription>
           </DialogHeader>
           {selectedTask && (
             <div className="space-y-4">

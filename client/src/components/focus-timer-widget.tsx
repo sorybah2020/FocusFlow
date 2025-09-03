@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
 import { Pause, SkipForward, Edit } from "lucide-react";
 import type { Task } from "@shared/schema";
 
@@ -86,6 +86,9 @@ export default function FocusTimerWidget({ taskTitle, onComplete, onTaskChange }
               <DialogContent data-testid="dialog-edit-focus-task">
                 <DialogHeader>
                   <DialogTitle>Change Focus Task</DialogTitle>
+                  <DialogDescription>
+                    Select a different task to focus on during your session.
+                  </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4">
                   <div>
