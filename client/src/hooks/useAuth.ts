@@ -1,16 +1,22 @@
 import { useQuery } from "@tanstack/react-query";
 
 export function useAuth() {
-  // Disable auth for now - show landing page to all users
   const { data: user, isLoading, error } = useQuery({
     queryKey: ["/api/auth/user"],
     retry: false,
-    enabled: false, // Completely disable the query
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    refetchOnWindowFocus: false,
   });
 
+  // Check if the error indicates the user is not authenticated
+  const isAuthError = error && (
+    (error as any).message?.includes("401") || 
+    (error as any).message?.includes("Unauthorized")
+  );
+
   return {
-    user: null,
-    isLoading: false,
-    isAuthenticated: false, // Always show landing page
+    user,
+    isLoading: isLoading && !isAuthError,
+    isAuthenticated: !!user && !isAuthError,
   };
 }
