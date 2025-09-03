@@ -13,21 +13,20 @@ import Progress from "@/pages/progress";
 import Landing from "@/pages/landing";
 import Login from "@/pages/login";
 import NotFound from "@/pages/not-found";
-import { useAuth } from "@/hooks/useAuth";
+
+// Simple auth check without hooks to prevent React errors
+function getAuthState() {
+  try {
+    const savedUser = localStorage.getItem('focusflow_user');
+    return savedUser ? JSON.parse(savedUser) : null;
+  } catch {
+    return null;
+  }
+}
 
 function Router() {
-  const { isAuthenticated, isLoading } = useAuth();
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-background text-foreground flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading...</p>
-        </div>
-      </div>
-    );
-  }
+  const user = getAuthState();
+  const isAuthenticated = !!user;
 
   return (
     <Switch>
@@ -46,7 +45,6 @@ function Router() {
           <Route path="/focus-timer" component={FocusTimer} />
           <Route path="/notes" component={Notes} />
           <Route path="/progress" component={Progress} />
-          {/* Redirect login/signup routes to dashboard for authenticated users */}
           <Route path="/login" component={Dashboard} />
           <Route path="/signup" component={Dashboard} />
           <Route component={NotFound} />
@@ -57,7 +55,8 @@ function Router() {
 }
 
 function App() {
-  const { isAuthenticated } = useAuth();
+  const user = getAuthState();
+  const isAuthenticated = !!user;
 
   return (
     <QueryClientProvider client={queryClient}>

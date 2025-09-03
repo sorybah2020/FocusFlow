@@ -1,33 +1,31 @@
 import { useState, useEffect } from "react";
 
+let globalAuthState = {
+  user: null,
+  isAuthenticated: false,
+  isLoading: true
+};
+
 export function useAuth() {
-  const [user, setUser] = useState(null);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const [authState, setAuthState] = useState(globalAuthState);
 
   useEffect(() => {
-    const savedUser = localStorage.getItem('focusflow_user');
-    if (savedUser) {
-      try {
-        const userData = JSON.parse(savedUser);
-        setUser(userData);
-        setIsAuthenticated(true);
-      } catch (error) {
-        console.error('Error parsing user data:', error);
-        localStorage.removeItem('focusflow_user');
-        setUser(null);
-        setIsAuthenticated(false);
-      }
-    } else {
-      setUser(null);
-      setIsAuthenticated(false);
+    // Check localStorage for user data
+    try {
+      const savedUser = localStorage.getItem('focusflow_user');
+      const newState = savedUser 
+        ? { user: JSON.parse(savedUser), isAuthenticated: true, isLoading: false }
+        : { user: null, isAuthenticated: false, isLoading: false };
+      
+      globalAuthState = newState;
+      setAuthState(newState);
+    } catch (error) {
+      const newState = { user: null, isAuthenticated: false, isLoading: false };
+      globalAuthState = newState;
+      setAuthState(newState);
+      localStorage.removeItem('focusflow_user');
     }
-    setIsLoading(false);
   }, []);
 
-  return {
-    user,
-    isAuthenticated,
-    isLoading
-  };
+  return authState;
 }
