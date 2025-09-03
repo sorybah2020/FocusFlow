@@ -24,7 +24,8 @@ export default function TaskItem({ task }: TaskItemProps) {
     title: task.title,
     description: task.description || "",
     priority: task.priority,
-    dueDate: task.dueDate ? new Date(task.dueDate).toISOString().split('T')[0] : ""
+    dueDate: task.dueDate ? new Date(task.dueDate).toISOString().split('T')[0] : "",
+    dueTime: task.dueDate ? new Date(task.dueDate).toTimeString().split(' ')[0].slice(0, 5) : ""
   });
   const queryClient = useQueryClient();
 
@@ -46,11 +47,19 @@ export default function TaskItem({ task }: TaskItemProps) {
 
   const handleEditSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    let dueDateTime = null;
+    if (editData.dueDate) {
+      dueDateTime = new Date(editData.dueDate);
+      if (editData.dueTime) {
+        const [hours, minutes] = editData.dueTime.split(':');
+        dueDateTime.setHours(parseInt(hours), parseInt(minutes));
+      }
+    }
     updateTaskMutation.mutate({
       title: editData.title,
       description: editData.description,
       priority: editData.priority,
-      dueDate: editData.dueDate ? new Date(editData.dueDate) : null
+      dueDate: dueDateTime
     });
     setIsEditDialogOpen(false);
   };
@@ -60,7 +69,8 @@ export default function TaskItem({ task }: TaskItemProps) {
       title: task.title,
       description: task.description || "",
       priority: task.priority,
-      dueDate: task.dueDate ? new Date(task.dueDate).toISOString().split('T')[0] : ""
+      dueDate: task.dueDate ? new Date(task.dueDate).toISOString().split('T')[0] : "",
+      dueTime: task.dueDate ? new Date(task.dueDate).toTimeString().split(' ')[0].slice(0, 5) : ""
     });
   };
 
@@ -97,13 +107,16 @@ export default function TaskItem({ task }: TaskItemProps) {
     const diffTime = dueDate.getTime() - now.getTime();
     const diffHours = Math.ceil(diffTime / (1000 * 60 * 60));
     
+    const timeString = dueDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const hasTime = dueDate.getHours() !== 0 || dueDate.getMinutes() !== 0;
+    
     if (diffHours < 0) {
-      return "Overdue";
+      return hasTime ? `Overdue (was ${timeString})` : "Overdue";
     } else if (diffHours < 24) {
-      return `Due in ${diffHours} hours`;
+      return hasTime ? `Due in ${diffHours} hours (${timeString})` : `Due in ${diffHours} hours`;
     } else {
       const diffDays = Math.ceil(diffHours / 24);
-      return `Due in ${diffDays} days`;
+      return hasTime ? `Due in ${diffDays} days (${timeString})` : `Due in ${diffDays} days`;
     }
   };
 
@@ -186,7 +199,7 @@ export default function TaskItem({ task }: TaskItemProps) {
                         data-testid={`textarea-edit-description-${task.id}`}
                       />
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-4">
                       <Select
                         value={editData.priority}
                         onValueChange={(value) => setEditData({ ...editData, priority: value })}
@@ -200,12 +213,22 @@ export default function TaskItem({ task }: TaskItemProps) {
                           <SelectItem value="urgent">Urgent</SelectItem>
                         </SelectContent>
                       </Select>
-                      <Input
-                        type="date"
-                        value={editData.dueDate}
-                        onChange={(e) => setEditData({ ...editData, dueDate: e.target.value })}
-                        data-testid={`input-edit-due-date-${task.id}`}
-                      />
+                      <div className="grid grid-cols-2 gap-4">
+                        <Input
+                          type="date"
+                          value={editData.dueDate}
+                          onChange={(e) => setEditData({ ...editData, dueDate: e.target.value })}
+                          data-testid={`input-edit-due-date-${task.id}`}
+                          placeholder="Due date"
+                        />
+                        <Input
+                          type="time"
+                          value={editData.dueTime}
+                          onChange={(e) => setEditData({ ...editData, dueTime: e.target.value })}
+                          data-testid={`input-edit-due-time-${task.id}`}
+                          placeholder="Due time"
+                        />
+                      </div>
                     </div>
                     <div className="flex justify-end space-x-2">
                       <Button
