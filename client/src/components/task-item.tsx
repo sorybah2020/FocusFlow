@@ -4,6 +4,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
 import { Edit, CheckCircle } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { cn } from "@/lib/utils";
@@ -15,6 +19,13 @@ interface TaskItemProps {
 
 export default function TaskItem({ task }: TaskItemProps) {
   const [isCompleted, setIsCompleted] = useState(task.completed);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editData, setEditData] = useState({
+    title: task.title,
+    description: task.description || "",
+    priority: task.priority,
+    dueDate: task.dueDate ? new Date(task.dueDate).toISOString().split('T')[0] : ""
+  });
   const queryClient = useQueryClient();
 
   const updateTaskMutation = useMutation({
@@ -31,6 +42,26 @@ export default function TaskItem({ task }: TaskItemProps) {
     const newCompleted = !isCompleted;
     setIsCompleted(newCompleted);
     updateTaskMutation.mutate({ completed: newCompleted });
+  };
+
+  const handleEditSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    updateTaskMutation.mutate({
+      title: editData.title,
+      description: editData.description,
+      priority: editData.priority,
+      dueDate: editData.dueDate ? new Date(editData.dueDate) : null
+    });
+    setIsEditDialogOpen(false);
+  };
+
+  const resetEditData = () => {
+    setEditData({
+      title: task.title,
+      description: task.description || "",
+      priority: task.priority,
+      dueDate: task.dueDate ? new Date(task.dueDate).toISOString().split('T')[0] : ""
+    });
   };
 
   const getPriorityColor = (priority: string) => {
@@ -111,17 +142,92 @@ export default function TaskItem({ task }: TaskItemProps) {
             >
               {task.priority.charAt(0).toUpperCase() + task.priority.slice(1)}
             </Badge>
-            <Button
-              variant="ghost"
-              size="sm"
-              data-testid={`button-edit-${task.id}`}
-            >
-              {isCompleted ? (
-                <CheckCircle className="h-4 w-4 text-green-600" />
-              ) : (
-                <Edit className="h-4 w-4" />
-              )}
-            </Button>
+            {isCompleted ? (
+              <CheckCircle className="h-4 w-4 text-green-600" />
+            ) : (
+              <Dialog 
+                open={isEditDialogOpen} 
+                onOpenChange={(open) => {
+                  setIsEditDialogOpen(open);
+                  if (!open) resetEditData();
+                }}
+              >
+                <DialogTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    data-testid={`button-edit-${task.id}`}
+                  >
+                    <Edit className="h-4 w-4" />
+                  </Button>
+                </DialogTrigger>
+                <DialogContent data-testid={`dialog-edit-task-${task.id}`}>
+                  <DialogHeader>
+                    <DialogTitle>Edit Task</DialogTitle>
+                    <DialogDescription>
+                      Update your task details and priority.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <form onSubmit={handleEditSubmit} className="space-y-4">
+                    <div>
+                      <Input
+                        placeholder="Task title"
+                        value={editData.title}
+                        onChange={(e) => setEditData({ ...editData, title: e.target.value })}
+                        data-testid={`input-edit-title-${task.id}`}
+                        required
+                      />
+                    </div>
+                    <div>
+                      <Textarea
+                        placeholder="Description (optional)"
+                        value={editData.description}
+                        onChange={(e) => setEditData({ ...editData, description: e.target.value })}
+                        data-testid={`textarea-edit-description-${task.id}`}
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <Select
+                        value={editData.priority}
+                        onValueChange={(value) => setEditData({ ...editData, priority: value })}
+                      >
+                        <SelectTrigger data-testid={`select-edit-priority-${task.id}`}>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="low">Low Priority</SelectItem>
+                          <SelectItem value="medium">Medium Priority</SelectItem>
+                          <SelectItem value="urgent">Urgent</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <Input
+                        type="date"
+                        value={editData.dueDate}
+                        onChange={(e) => setEditData({ ...editData, dueDate: e.target.value })}
+                        data-testid={`input-edit-due-date-${task.id}`}
+                      />
+                    </div>
+                    <div className="flex justify-end space-x-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => setIsEditDialogOpen(false)}
+                        data-testid={`button-cancel-edit-${task.id}`}
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        type="submit"
+                        data-testid={`button-save-edit-${task.id}`}
+                        disabled={updateTaskMutation.isPending}
+                      >
+                        {updateTaskMutation.isPending ? "Saving..." : "Save Changes"}
+                      </Button>
+                    </div>
+                  </form>
+                </DialogContent>
+              </Dialog>
+            )}
           </div>
         </div>
       </CardContent>
