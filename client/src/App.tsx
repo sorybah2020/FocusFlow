@@ -35,6 +35,9 @@ function Router() {
           <Route path="/focus-timer" component={FocusTimer} />
           <Route path="/notes" component={Notes} />
           <Route path="/progress" component={Progress} />
+          {/* Redirect login/signup routes to dashboard for authenticated users */}
+          <Route path="/login" component={Dashboard} />
+          <Route path="/signup" component={Dashboard} />
           <Route component={NotFound} />
         </>
       )}
