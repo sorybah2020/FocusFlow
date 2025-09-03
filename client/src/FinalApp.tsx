@@ -48,10 +48,32 @@ function FinalApp() {
                 <Route path="/focus-timer" component={FocusTimer} />
                 <Route path="/notes" component={Notes} />
                 <Route path="/progress" component={Progress} />
-                <Route path="/login" component={Dashboard} />
-                <Route path="/signup" component={Dashboard} />
+                <Route path="/login">
+                  <div className="min-h-screen flex items-center justify-center bg-background">
+                    <div className="text-center">
+                      <h1 className="text-2xl font-bold mb-4">Already logged in</h1>
+                      <p className="text-muted-foreground mb-4">You're already signed in to FocusFlow.</p>
+                      <a href="/" className="text-primary hover:underline">Go to Dashboard</a>
+                    </div>
+                  </div>
+                </Route>
+                <Route path="/signup">
+                  <div className="min-h-screen flex items-center justify-center bg-background">
+                    <div className="text-center">
+                      <h1 className="text-2xl font-bold mb-4">Already logged in</h1>
+                      <p className="text-muted-foreground mb-4">You're already signed in to FocusFlow.</p>
+                      <a href="/" className="text-primary hover:underline">Go to Dashboard</a>
+                    </div>
+                  </div>
+                </Route>
                 <Route>
-                  <Dashboard />
+                  <div className="min-h-screen flex items-center justify-center bg-background">
+                    <div className="text-center">
+                      <h1 className="text-2xl font-bold mb-4">Page not found</h1>
+                      <p className="text-muted-foreground mb-4">The page you're looking for doesn't exist.</p>
+                      <a href="/" className="text-primary hover:underline">Go to Dashboard</a>
+                    </div>
+                  </div>
                 </Route>
               </>
             )}
