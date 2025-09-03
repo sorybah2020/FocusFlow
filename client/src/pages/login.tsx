@@ -67,8 +67,8 @@ export default function Login() {
               </div>
             </div>
 
-            {/* Traditional Form (Disabled - Replit Auth Only) */}
-            <div className="space-y-4 opacity-60 pointer-events-none">
+            {/* Email/Password Form */}
+            <form onSubmit={(e) => { e.preventDefault(); handleReplitAuth(); }} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <div className="relative">
@@ -78,7 +78,8 @@ export default function Login() {
                     type="email" 
                     placeholder="Enter your email"
                     className="pl-10"
-                    disabled
+                    data-testid="input-email"
+                    required
                   />
                 </div>
               </div>
@@ -92,24 +93,43 @@ export default function Login() {
                     type="password" 
                     placeholder="Enter your password"
                     className="pl-10"
-                    disabled
+                    data-testid="input-password"
+                    required
                   />
                 </div>
               </div>
 
+              {!isLogin && (
+                <div className="space-y-2">
+                  <Label htmlFor="confirmPassword">Confirm Password</Label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-5 w-5" />
+                    <Input 
+                      id="confirmPassword" 
+                      type="password" 
+                      placeholder="Confirm your password"
+                      className="pl-10"
+                      data-testid="input-confirm-password"
+                      required
+                    />
+                  </div>
+                </div>
+              )}
+
               <Button 
+                type="submit"
                 size="lg"
                 variant="outline" 
                 className="w-full py-6 text-lg"
-                disabled
+                data-testid="button-email-auth"
               >
                 {isLogin ? "Sign In" : "Create Account"}
               </Button>
-            </div>
+            </form>
 
             <div className="text-center text-sm text-muted-foreground">
               <p className="mb-2">
-                Currently using secure Replit authentication
+                Note: Email/password currently redirects to secure Replit authentication
               </p>
               {isLogin ? (
                 <p>
