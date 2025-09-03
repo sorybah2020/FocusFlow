@@ -98,7 +98,7 @@ export default function FocusTimerWidget({ taskTitle, onComplete, onTaskChange }
                       </SelectTrigger>
                       <SelectContent>
                         {incompleteTasks.length === 0 ? (
-                          <SelectItem value="" disabled>No pending tasks available</SelectItem>
+                          <SelectItem value="no-tasks" disabled>No pending tasks available</SelectItem>
                         ) : (
                           incompleteTasks.map((task) => (
                             <SelectItem key={task.id} value={task.id}>
