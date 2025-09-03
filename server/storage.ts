@@ -1,6 +1,7 @@
 import { 
   type User, 
   type InsertUser, 
+  type UpsertUser,
   type Task, 
   type InsertTask,
   type FocusSession,
@@ -8,13 +9,18 @@ import {
   type Note,
   type InsertNote,
   type Habit,
-  type InsertHabit
+  type InsertHabit,
+  users
 } from "@shared/schema";
+import { db } from "./db";
+import { eq } from "drizzle-orm";
 import { randomUUID } from "crypto";
 
 export interface IStorage {
   // Users
+  // (IMPORTANT) these user operations are mandatory for Replit Auth.
   getUser(id: string): Promise<User | undefined>;
+  upsertUser(user: UpsertUser): Promise<User>;
   getUserByEmail(email: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: string, updates: Partial<User>): Promise<User | undefined>;
@@ -63,10 +69,12 @@ export class MemStorage implements IStorage {
       firstName: "Jordan",
       lastName: "Smith",
       email: "jordan@example.com",
+      profileImageUrl: null,
       level: 12,
       totalFocusTime: 150, // 2.5 hours
       currentStreak: 7,
       createdAt: new Date(),
+      updatedAt: new Date(),
     };
     this.users.set(sampleUser.id, sampleUser);
   }
@@ -80,15 +88,38 @@ export class MemStorage implements IStorage {
     return Array.from(this.users.values()).find(user => user.email === email);
   }
 
+  async upsertUser(userData: UpsertUser): Promise<User> {
+    const id = userData.id!;
+    const existingUser = this.users.get(id);
+    const user: User = {
+      id,
+      email: userData.email || null,
+      firstName: userData.firstName || null,
+      lastName: userData.lastName || null,
+      profileImageUrl: userData.profileImageUrl || null,
+      level: existingUser?.level || 1,
+      totalFocusTime: existingUser?.totalFocusTime || 0,
+      currentStreak: existingUser?.currentStreak || 0,
+      createdAt: existingUser?.createdAt || new Date(),
+      updatedAt: new Date(),
+    };
+    this.users.set(id, user);
+    return user;
+  }
+
   async createUser(insertUser: InsertUser): Promise<User> {
     const id = randomUUID();
     const user: User = { 
-      ...insertUser, 
       id, 
-      level: 1,
-      totalFocusTime: 0,
-      currentStreak: 0,
-      createdAt: new Date() 
+      email: insertUser.email || null,
+      firstName: insertUser.firstName || null,
+      lastName: insertUser.lastName || null,
+      profileImageUrl: insertUser.profileImageUrl || null,
+      level: insertUser.level || 1,
+      totalFocusTime: insertUser.totalFocusTime || 0,
+      currentStreak: insertUser.currentStreak || 0,
+      createdAt: new Date(),
+      updatedAt: new Date()
     };
     this.users.set(id, user);
     return user;
@@ -224,4 +255,113 @@ export class MemStorage implements IStorage {
   }
 }
 
-export const storage = new MemStorage();
+// Database storage implementation
+export class DatabaseStorage implements IStorage {
+  // User operations
+  // (IMPORTANT) these user operations are mandatory for Replit Auth.
+
+  async getUser(id: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user;
+  }
+
+  async upsertUser(userData: UpsertUser): Promise<User> {
+    const [user] = await db
+      .insert(users)
+      .values(userData)
+      .onConflictDoUpdate({
+        target: users.id,
+        set: {
+          ...userData,
+          updatedAt: new Date(),
+        },
+      })
+      .returning();
+    return user;
+  }
+
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.email, email));
+    return user;
+  }
+
+  async createUser(insertUser: InsertUser): Promise<User> {
+    const [user] = await db.insert(users).values(insertUser).returning();
+    return user;
+  }
+
+  async updateUser(id: string, updates: Partial<User>): Promise<User | undefined> {
+    const [user] = await db
+      .update(users)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(users.id, id))
+      .returning();
+    return user;
+  }
+
+  // Tasks - using memory storage for now, can implement database later
+  private memStorage = new MemStorage();
+
+  async getTasks(userId: string): Promise<Task[]> {
+    return this.memStorage.getTasks(userId);
+  }
+
+  async getTask(id: string): Promise<Task | undefined> {
+    return this.memStorage.getTask(id);
+  }
+
+  async createTask(task: InsertTask): Promise<Task> {
+    return this.memStorage.createTask(task);
+  }
+
+  async updateTask(id: string, updates: Partial<Task>): Promise<Task | undefined> {
+    return this.memStorage.updateTask(id, updates);
+  }
+
+  async deleteTask(id: string): Promise<boolean> {
+    return this.memStorage.deleteTask(id);
+  }
+
+  async getFocusSessions(userId: string): Promise<FocusSession[]> {
+    return this.memStorage.getFocusSessions(userId);
+  }
+
+  async createFocusSession(session: InsertFocusSession): Promise<FocusSession> {
+    return this.memStorage.createFocusSession(session);
+  }
+
+  async getNotes(userId: string): Promise<Note[]> {
+    return this.memStorage.getNotes(userId);
+  }
+
+  async getNote(id: string): Promise<Note | undefined> {
+    return this.memStorage.getNote(id);
+  }
+
+  async createNote(note: InsertNote): Promise<Note> {
+    return this.memStorage.createNote(note);
+  }
+
+  async updateNote(id: string, updates: Partial<Note>): Promise<Note | undefined> {
+    return this.memStorage.updateNote(id, updates);
+  }
+
+  async deleteNote(id: string): Promise<boolean> {
+    return this.memStorage.deleteNote(id);
+  }
+
+  async getHabits(userId: string, date?: Date): Promise<Habit[]> {
+    return this.memStorage.getHabits(userId, date);
+  }
+
+  async createHabit(habit: InsertHabit): Promise<Habit> {
+    return this.memStorage.createHabit(habit);
+  }
+
+  async updateHabit(id: string, updates: Partial<Habit>): Promise<Habit | undefined> {
+    return this.memStorage.updateHabit(id, updates);
+  }
+}
+
+// Use database storage for production with Replit Auth
+export const storage = new DatabaseStorage();

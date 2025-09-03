@@ -10,18 +10,31 @@ import Calendar from "@/pages/calendar";
 import FocusTimer from "@/pages/focus-timer";
 import Notes from "@/pages/notes";
 import Progress from "@/pages/progress";
+import Landing from "@/pages/landing";
 import NotFound from "@/pages/not-found";
+import { useAuth } from "@/hooks/useAuth";
 
 function Router() {
+  const { isAuthenticated, isLoading } = useAuth();
+
   return (
     <Switch>
-      <Route path="/" component={Dashboard} />
-      <Route path="/tasks" component={Tasks} />
-      <Route path="/calendar" component={Calendar} />
-      <Route path="/focus-timer" component={FocusTimer} />
-      <Route path="/notes" component={Notes} />
-      <Route path="/progress" component={Progress} />
-      <Route component={NotFound} />
+      {!isAuthenticated ? (
+        <>
+          <Route path="/" component={Landing} />
+          <Route component={Landing} />
+        </>
+      ) : (
+        <>
+          <Route path="/" component={Dashboard} />
+          <Route path="/tasks" component={Tasks} />
+          <Route path="/calendar" component={Calendar} />
+          <Route path="/focus-timer" component={FocusTimer} />
+          <Route path="/notes" component={Notes} />
+          <Route path="/progress" component={Progress} />
+          <Route component={NotFound} />
+        </>
+      )}
     </Switch>
   );
 }
@@ -31,12 +44,33 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <div className="min-h-screen bg-background">
-          <Navigation />
-          <Router />
+          <AuthenticatedLayout />
         </div>
         <Toaster />
       </TooltipProvider>
     </QueryClientProvider>
+  );
+}
+
+function AuthenticatedLayout() {
+  const { isAuthenticated, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background text-foreground flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      {isAuthenticated && <Navigation />}
+      <Router />
+    </>
   );
 }
 
