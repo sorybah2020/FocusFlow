@@ -16,11 +16,22 @@ import NotFound from "@/pages/not-found";
 import { useAuth } from "@/hooks/useAuth";
 
 function Router() {
-  const authData = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background text-foreground flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <Switch>
-      {!authData.isAuthenticated ? (
+      {!isAuthenticated ? (
         <>
           <Route path="/" component={Landing} />
           <Route path="/login" component={Login} />
@@ -46,37 +57,18 @@ function Router() {
 }
 
 function App() {
+  const { isAuthenticated } = useAuth();
+
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <div className="min-h-screen bg-background">
-          <AuthenticatedLayout />
+          {isAuthenticated && <Navigation />}
+          <Router />
         </div>
         <Toaster />
       </TooltipProvider>
     </QueryClientProvider>
-  );
-}
-
-function AuthenticatedLayout() {
-  const authData = useAuth();
-
-  if (authData.isLoading) {
-    return (
-      <div className="min-h-screen bg-background text-foreground flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading...</p>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <>
-      {authData.isAuthenticated && <Navigation />}
-      <Router />
-    </>
   );
 }
 
