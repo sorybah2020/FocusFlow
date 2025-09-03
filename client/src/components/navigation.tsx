@@ -1,6 +1,7 @@
 import { Link, useLocation } from "wouter";
 import { Brain, Bell, User } from "lucide-react";
 import { cn } from "@/lib/utils";
+import LogoutButton from "@/components/logout-button";
 
 export default function Navigation() {
   const [location] = useLocation();
@@ -51,6 +52,7 @@ export default function Navigation() {
             </div>
           </div>
           <div className="flex items-center space-x-4">
+            <LogoutButton />
             <button className="text-muted-foreground hover:text-foreground" data-testid="button-notifications">
               <Bell className="h-5 w-5" />
             </button>

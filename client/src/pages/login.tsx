@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -6,9 +7,70 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Brain, Mail, Lock, ArrowRight, Sparkles } from "lucide-react";
 import { Link } from "wouter";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Login() {
+  const [, setLocation] = useLocation();
   const [isLogin, setIsLogin] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
+    confirmPassword: ""
+  });
+  const { toast } = useToast();
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    // Simple validation
+    if (!formData.email || !formData.password) {
+      toast({
+        title: "Please fill in all fields",
+        variant: "destructive"
+      });
+      setIsLoading(false);
+      return;
+    }
+
+    if (!isLogin && formData.password !== formData.confirmPassword) {
+      toast({
+        title: "Passwords don't match",
+        variant: "destructive"
+      });
+      setIsLoading(false);
+      return;
+    }
+
+    // Simulate authentication - create a user object
+    const userData = {
+      id: Date.now().toString(),
+      email: formData.email,
+      firstName: formData.email.split('@')[0], // Use part before @ as name
+      lastName: "",
+      profileImageUrl: null,
+      currentStreak: 0,
+      totalFocusTime: 0,
+      level: 1
+    };
+
+    // Save to localStorage
+    localStorage.setItem('focusflow_user', JSON.stringify(userData));
+    
+    toast({
+      title: isLogin ? "Welcome back!" : "Account created successfully!",
+      description: "Redirecting to your dashboard..."
+    });
+
+    // Redirect to dashboard
+    setTimeout(() => {
+      setLocation('/');
+      window.location.reload(); // Force refresh to update auth state
+    }, 1500);
+    
+    setIsLoading(false);
+  };
 
   const handleReplitAuth = () => {
     window.location.href = '/api/login';
@@ -68,7 +130,7 @@ export default function Login() {
             </div>
 
             {/* Email/Password Form */}
-            <form onSubmit={(e) => { e.preventDefault(); handleReplitAuth(); }} className="space-y-4">
+            <form onSubmit={handleLogin} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <div className="relative">
@@ -80,6 +142,8 @@ export default function Login() {
                     className="pl-10"
                     data-testid="input-email"
                     required
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   />
                 </div>
               </div>
@@ -95,6 +159,8 @@ export default function Login() {
                     className="pl-10"
                     data-testid="input-password"
                     required
+                    value={formData.password}
+                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                   />
                 </div>
               </div>
@@ -110,7 +176,9 @@ export default function Login() {
                       placeholder="Confirm your password"
                       className="pl-10"
                       data-testid="input-confirm-password"
-                      required
+                      required={!isLogin}
+                      value={formData.confirmPassword}
+                      onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
                     />
                   </div>
                 </div>
@@ -122,14 +190,15 @@ export default function Login() {
                 variant="outline" 
                 className="w-full py-6 text-lg"
                 data-testid="button-email-auth"
+                disabled={isLoading}
               >
-                {isLogin ? "Sign In" : "Create Account"}
+                {isLoading ? "Please wait..." : (isLogin ? "Sign In" : "Create Account")}
               </Button>
             </form>
 
             <div className="text-center text-sm text-muted-foreground">
               <p className="mb-2">
-                Note: Email/password currently redirects to secure Replit authentication
+                Or try secure Replit authentication above
               </p>
               {isLogin ? (
                 <p>

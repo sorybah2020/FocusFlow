@@ -28,7 +28,7 @@ export default function Dashboard() {
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { data: user } = useQuery<User>({ queryKey: ["/api/users/current"] });
+  const { data: user } = useQuery<User>({ queryKey: ["/api/auth/user"] });
   const { data: tasks = [] } = useQuery<Task[]>({ queryKey: ["/api/tasks"] });
   const { data: habits = [] } = useQuery<Habit[]>({ 
     queryKey: ["/api/habits"], 
