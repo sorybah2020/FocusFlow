@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
@@ -70,8 +70,19 @@ export default function Dashboard() {
   const totalHabits = habits.length;
 
   // Get the first incomplete task for the focus timer
+  const [focusTaskTitle, setFocusTaskTitle] = useState<string>("");
   const currentFocusTask = tasks.find(task => !task.completed);
-  const focusTaskTitle = currentFocusTask ? currentFocusTask.title : "Focus Session";
+
+  // Update focus task when tasks change
+  useEffect(() => {
+    if (!focusTaskTitle && currentFocusTask) {
+      setFocusTaskTitle(currentFocusTask.title);
+    }
+  }, [tasks, currentFocusTask, focusTaskTitle]);
+
+  const handleTaskChange = (newTaskTitle: string) => {
+    setFocusTaskTitle(newTaskTitle);
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -104,7 +115,10 @@ export default function Dashboard() {
         {/* Left Column */}
         <div className="lg:col-span-2 space-y-8">
           {/* Focus Timer */}
-          <FocusTimerWidget taskTitle={focusTaskTitle} />
+          <FocusTimerWidget 
+            taskTitle={focusTaskTitle || "Focus Session"} 
+            onTaskChange={handleTaskChange}
+          />
 
           {/* Today's Tasks */}
           <Card data-testid="todays-tasks">
