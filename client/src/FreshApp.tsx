@@ -4,7 +4,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import Navigation from "@/components/navigation";
-import Dashboard from "@/pages/dashboard";
+import SimpleDashboard from "@/pages/simple-dashboard";
 import Tasks from "@/pages/tasks";
 import Calendar from "@/pages/calendar";
 import FocusTimer from "@/pages/focus-timer";
@@ -42,14 +42,14 @@ function FreshApp() {
               </>
             ) : (
               <>
-                <Route path="/" component={Dashboard} />
+                <Route path="/" component={SimpleDashboard} />
                 <Route path="/tasks" component={Tasks} />
                 <Route path="/calendar" component={Calendar} />
                 <Route path="/focus-timer" component={FocusTimer} />
                 <Route path="/notes" component={Notes} />
                 <Route path="/progress" component={Progress} />
-                <Route path="/login" component={Dashboard} />
-                <Route path="/signup" component={Dashboard} />
+                <Route path="/login" component={SimpleDashboard} />
+                <Route path="/signup" component={SimpleDashboard} />
                 <Route component={NotFound} />
               </>
             )}
