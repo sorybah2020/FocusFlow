@@ -1,4 +1,4 @@
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Coffee, Play } from "lucide-react";
 
@@ -18,16 +18,16 @@ export default function BreakReminderModal({
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md" data-testid="break-reminder-modal">
+        <DialogHeader>
+          <DialogTitle>Time for a break! 🎉</DialogTitle>
+          <DialogDescription>
+            Great job focusing! Take a 5-minute break to recharge.
+          </DialogDescription>
+        </DialogHeader>
         <div className="text-center py-4">
-          <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+          <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
             <Coffee className="text-primary text-2xl h-8 w-8" />
           </div>
-          <h3 className="text-xl font-semibold text-foreground mb-2" data-testid="text-break-title">
-            Time for a break! 🎉
-          </h3>
-          <p className="text-muted-foreground mb-6" data-testid="text-break-description">
-            Great job focusing! Take a 5-minute break to recharge.
-          </p>
           <div className="space-y-3">
             <Button
               onClick={onStartBreak}
