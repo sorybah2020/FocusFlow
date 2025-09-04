@@ -1,5 +1,5 @@
 import { createRoot } from "react-dom/client";
-import FinalApp from "./FinalApp.tsx";
+import CleanApp from "./CleanApp.tsx";
 import "./index.css";
 
-createRoot(document.getElementById("root")!).render(<FinalApp />);
+createRoot(document.getElementById("root")!).render(<CleanApp />);
