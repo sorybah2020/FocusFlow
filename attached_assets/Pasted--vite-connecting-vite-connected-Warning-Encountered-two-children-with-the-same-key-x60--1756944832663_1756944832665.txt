@@ -1,0 +1,35 @@
+[vite] connecting...
+[vite] connected.
+Warning: Encountered two children with the same key, &#x60;1&#x60;. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.
+    at div
+    at div
+    at _c9 (https://d2e014c4-431e-4bc7-9531-5d386ec60905-00-1es2qi6mfsmp8.riker.replit.dev/src/components/ui/card.tsx:114:12)
+    at div
+    at _c (https://d2e014c4-431e-4bc7-9531-5d386ec60905-00-1es2qi6mfsmp8.riker.replit.dev/src/components/ui/card.tsx:20:11)
+    at div
+    at Calendar (https://d2e014c4-431e-4bc7-9531-5d386ec60905-00-1es2qi6mfsmp8.riker.replit.dev/src/pages/calendar.tsx?t=1756944740773:32:41)
+    at Route (https://d2e014c4-431e-4bc7-9531-5d386ec60905-00-1es2qi6mfsmp8.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=0e89ac13:323:16)
+    at Switch (https://d2e014c4-431e-4bc7-9531-5d386ec60905-00-1es2qi6mfsmp8.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=0e89ac13:379:17)
+    at div
+    at Provider (https://d2e014c4-431e-4bc7-9531-5d386ec60905-00-1es2qi6mfsmp8.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-PLT6GTVM.js?v=0e89ac13:38:15)
+    at TooltipProvider (https://d2e014c4-431e-4bc7-9531-5d386ec60905-00-1es2qi6mfsmp8.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=0e89ac13:61:5)
+    at QueryClientProvider (https://d2e014c4-431e-4bc7-9531-5d386ec60905-00-1es2qi6mfsmp8.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=0e89ac13:2805:3)
+    at CleanApp
+at div
+at div
+at _c9 (https://d2e014c4-431e-4bc7-9531-5d386ec60905-00-1es2qi6mfsmp8.riker.replit.dev/src/components/ui/card.tsx:114:12)
+at div
+at _c (https://d2e014c4-431e-4bc7-9531-5d386ec60905-00-1es2qi6mfsmp8.riker.replit.dev/src/components/ui/card.tsx:20:11)
+at div
+at Calendar (https://d2e014c4-431e-4bc7-9531-5d386ec60905-00-1es2qi6mfsmp8.riker.replit.dev/src/pages/calendar.tsx?t=1756944740773:32:41)
+at Route (https://d2e014c4-431e-4bc7-9531-5d386ec60905-00-1es2qi6mfsmp8.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=0e89ac13:323:16)
+at Switch (https://d2e014c4-431e-4bc7-9531-5d386ec60905-00-1es2qi6mfsmp8.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=0e89ac13:379:17)
+at div
+at Provider (https://d2e014c4-431e-4bc7-9531-5d386ec60905-00-1es2qi6mfsmp8.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-PLT6GTVM.js?v=0e89ac13:38:15)
+at TooltipProvider (https://d2e014c4-431e-4bc7-9531-5d386ec60905-00-1es2qi6mfsmp8.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=0e89ac13:61:5)
+at QueryClientProvider (https://d2e014c4-431e-4bc7-9531-5d386ec60905-00-1es2qi6mfsmp8.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=0e89ac13:2805:3)
+at CleanApp
+at t.value (https://d2e014c4-431e-4bc7-9531-5d386ec60905-00-1es2qi6mfsmp8.riker.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:17465)
+at new t (https://d2e014c4-431e-4bc7-9531-5d386ec60905-00-1es2qi6mfsmp8.riker.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:12630)
+at t.value (https://d2e014c4-431e-4bc7-9531-5d386ec60905-00-1es2qi6mfsmp8.riker.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:32766)
+at https://d2e014c4-431e-4bc7-9531-5d386ec60905-00-1es2qi6mfsmp8.riker.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:34400

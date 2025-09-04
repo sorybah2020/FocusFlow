@@ -235,7 +235,7 @@ export default function Calendar() {
           <div className="grid grid-cols-7 gap-2">
             {calendarDays.map((day, index) => {
               if (day === null) {
-                return <div key={index} className="h-24" />;
+                return <div key={`empty-${index}`} className="h-24" />;
               }
 
               const dayTasks = getTasksForDate(day);
@@ -243,7 +243,7 @@ export default function Calendar() {
 
               return (
                 <div
-                  key={day}
+                  key={`${currentDate.getFullYear()}-${currentDate.getMonth()}-${day}`}
                   className={`h-24 border rounded-lg p-2 cursor-pointer transition-colors hover:bg-muted/50 ${
                     isCurrentDay ? 'bg-primary/10 border-primary' : 'border-border'
                   }`}
