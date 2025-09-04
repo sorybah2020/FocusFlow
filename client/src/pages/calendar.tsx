@@ -256,9 +256,9 @@ export default function Calendar() {
                     {day}
                   </div>
                   <div className="space-y-1">
-                    {dayTasks.slice(0, 2).map((task, taskIndex) => (
+                    {dayTasks.slice(0, 2).map((task) => (
                       <div
-                        key={taskIndex}
+                        key={task.id}
                         className={`text-xs px-1 py-0.5 rounded text-white truncate cursor-pointer hover:opacity-80 ${
                           task.completed ? 'bg-gray-400 line-through' :
                           task.priority === 'urgent' ? 'bg-red-500' :
