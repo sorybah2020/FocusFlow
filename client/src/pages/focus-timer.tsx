@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -8,6 +8,7 @@ import { Play, Pause, Square, Settings } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import BreakReminderModal from "@/components/break-reminder-modal";
+import type { FocusSession } from "@shared/schema";
 
 export default function FocusTimer() {
   const [timeRemaining, setTimeRemaining] = useState(25 * 60); // 25 minutes
@@ -20,6 +21,38 @@ export default function FocusTimer() {
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  
+  // Fetch focus sessions to calculate real total focus time
+  const { data: focusSessions = [] } = useQuery<FocusSession[]>({
+    queryKey: ["/api/focus-sessions"]
+  });
+
+  // Request notification permission on component mount
+  useEffect(() => {
+    if ("Notification" in window && Notification.permission === "default") {
+      Notification.requestPermission();
+    }
+  }, []);
+
+  // Show browser notification when timer completes
+  const showNotification = (title: string, message: string) => {
+    if ("Notification" in window && Notification.permission === "granted") {
+      new Notification(title, {
+        body: message,
+        icon: "/favicon.ico",
+        tag: "focus-timer"
+      });
+    }
+    
+    // Also play a sound if possible
+    try {
+      const audio = new Audio();
+      audio.src = "data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+D4vWoaByJYT1xLuJMsOjZ8VmVZgZOeXMQ8pV4==";
+      audio.play().catch(() => {}); // Ignore errors if sound fails
+    } catch (e) {
+      // Ignore audio errors
+    }
+  };
 
   const createSessionMutation = useMutation({
     mutationFn: async (sessionData: any) => {
@@ -57,11 +90,15 @@ export default function FocusTimer() {
     if (sessionType === "focus") {
       setSessionsCompleted(prev => prev + 1);
       setShowBreakModal(true);
-      toast({ title: "Focus session complete!", description: "Time for a break!" });
+      const message = "Time for a break!";
+      toast({ title: "Focus session complete!", description: message });
+      showNotification("🎯 Focus Session Complete!", message);
     } else {
       setSessionType("focus");
       setTimeRemaining(sessionLength * 60);
-      toast({ title: "Break complete!", description: "Ready for another focus session?" });
+      const message = "Ready for another focus session?";
+      toast({ title: "Break complete!", description: message });
+      showNotification("🌟 Break Complete!", message);
     }
   };
 
@@ -261,13 +298,26 @@ export default function FocusTimer() {
               <h3 className="text-lg font-semibold mb-4">Today's Progress</h3>
               <div className="space-y-3">
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Sessions Completed</span>
+                  <span className="text-muted-foreground">Sessions Today</span>
                   <span className="font-medium" data-testid="text-sessions-completed">{sessionsCompleted}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Total Focus Time</span>
                   <span className="font-medium" data-testid="text-total-focus-time">
-                    {Math.floor((sessionsCompleted * sessionLength) / 60)}h {(sessionsCompleted * sessionLength) % 60}m
+                    {(() => {
+                      const totalMinutes = focusSessions
+                        .filter(session => session.type === 'focus')
+                        .reduce((sum, session) => sum + session.duration, 0);
+                      const hours = Math.floor(totalMinutes / 60);
+                      const minutes = totalMinutes % 60;
+                      return `${hours}h ${minutes}m`;
+                    })()}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Total Sessions</span>
+                  <span className="font-medium" data-testid="text-total-sessions">
+                    {focusSessions.filter(session => session.type === 'focus').length}
                   </span>
                 </div>
               </div>
