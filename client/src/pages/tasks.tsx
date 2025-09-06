@@ -10,6 +10,7 @@ import { Plus, Filter } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import TaskItem from "@/components/task-item";
+import AITaskAssistant from "@/components/ai-task-assistant";
 import type { Task } from "@shared/schema";
 
 export default function Tasks() {
@@ -57,6 +58,10 @@ export default function Tasks() {
       ...newTask,
       dueDate: newTask.dueDate ? new Date(newTask.dueDate) : null,
     });
+  };
+
+  const handleAICreateTask = (taskData: any) => {
+    createTaskMutation.mutate(taskData);
   };
 
   if (isLoading) {
@@ -176,6 +181,14 @@ export default function Tasks() {
           </div>
         </CardContent>
       </Card>
+
+      {/* AI Task Assistant */}
+      {tasks.length > 0 && (
+        <AITaskAssistant 
+          tasks={tasks} 
+          onCreateTask={handleAICreateTask}
+        />
+      )}
 
       {/* Tasks List */}
       <div className="space-y-4" data-testid="tasks-list">

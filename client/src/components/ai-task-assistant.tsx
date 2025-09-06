@@ -1,0 +1,302 @@
+import { useState } from "react";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { Brain, Lightbulb, Target, Clock, Users } from "lucide-react";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+import type { Task } from "@shared/schema";
+
+interface TaskSuggestion {
+  category: string;
+  priority: "low" | "medium" | "urgent";
+  estimatedDuration: number;
+  subtasks?: string[];
+  reasoning: string;
+}
+
+interface TaskGroupSuggestion {
+  groupName: string;
+  tasks: string[];
+  reasoning: string;
+  estimatedTotalTime: number;
+}
+
+interface AITaskAssistantProps {
+  tasks: Task[];
+  onCreateTask: (taskData: any) => void;
+}
+
+export default function AITaskAssistant({ tasks, onCreateTask }: AITaskAssistantProps) {
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [taskAnalysis, setTaskAnalysis] = useState<TaskSuggestion | null>(null);
+  const [taskGroups, setTaskGroups] = useState<TaskGroupSuggestion[]>([]);
+  const [subtasks, setSubtasks] = useState<string[]>([]);
+
+  const { toast } = useToast();
+
+  const analyzeTaskMutation = useMutation({
+    mutationFn: async (task: Task) => {
+      const response = await apiRequest("POST", "/api/ai/analyze-task", {
+        title: task.title,
+        description: task.description
+      });
+      return response.json();
+    },
+    onSuccess: (data) => {
+      setTaskAnalysis(data);
+      toast({ title: "Task analyzed!", description: "AI suggestions ready" });
+    },
+    onError: () => {
+      toast({ title: "Analysis failed", description: "AI service unavailable", variant: "destructive" });
+    }
+  });
+
+  const suggestGroupsMutation = useMutation({
+    mutationFn: async () => {
+      const taskData = tasks.map(task => ({
+        title: task.title,
+        description: task.description,
+        priority: task.priority
+      }));
+      const response = await apiRequest("POST", "/api/ai/suggest-groups", {
+        tasks: taskData
+      });
+      return response.json();
+    },
+    onSuccess: (data) => {
+      setTaskGroups(data);
+      toast({ title: "Groups suggested!", description: "Check AI recommendations" });
+    },
+    onError: () => {
+      toast({ title: "Grouping failed", description: "AI service unavailable", variant: "destructive" });
+    }
+  });
+
+  const breakDownTaskMutation = useMutation({
+    mutationFn: async (task: Task) => {
+      const response = await apiRequest("POST", "/api/ai/break-down-task", {
+        title: task.title,
+        description: task.description
+      });
+      return response.json();
+    },
+    onSuccess: (data) => {
+      setSubtasks(data.subtasks);
+      toast({ title: "Task broken down!", description: "Smaller steps ready" });
+    },
+    onError: () => {
+      toast({ title: "Breakdown failed", description: "AI service unavailable", variant: "destructive" });
+    }
+  });
+
+  const createSubtasks = () => {
+    if (!selectedTask || !subtasks.length) return;
+
+    subtasks.forEach((subtask, index) => {
+      onCreateTask({
+        title: `${selectedTask.title} - Step ${index + 1}`,
+        description: subtask,
+        priority: selectedTask.priority,
+        dueDate: selectedTask.dueDate
+      });
+    });
+
+    toast({ 
+      title: "Subtasks created!", 
+      description: `Added ${subtasks.length} manageable steps` 
+    });
+    
+    setSubtasks([]);
+    setSelectedTask(null);
+  };
+
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case "urgent": return "destructive";
+      case "medium": return "default";
+      case "low": return "secondary";
+      default: return "outline";
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* AI Assistant Header */}
+      <Card data-testid="ai-assistant-card">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Brain className="h-5 w-5 text-blue-500" />
+            AI Task Assistant
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <Button
+              variant="outline"
+              onClick={() => tasks.length >= 2 && suggestGroupsMutation.mutate()}
+              disabled={tasks.length < 2 || suggestGroupsMutation.isPending}
+              className="flex items-center gap-2"
+              data-testid="button-suggest-groups"
+            >
+              <Users className="h-4 w-4" />
+              {suggestGroupsMutation.isPending ? "Analyzing..." : "Group Tasks"}
+            </Button>
+          </div>
+
+          {/* Task Selection for Analysis */}
+          {tasks.length > 0 && (
+            <div>
+              <h4 className="text-sm font-medium mb-2">Analyze a specific task:</h4>
+              <div className="grid grid-cols-1 gap-2 max-h-32 overflow-y-auto">
+                {tasks.filter(task => !task.completed).map((task) => (
+                  <Button
+                    key={task.id}
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setSelectedTask(task);
+                      analyzeTaskMutation.mutate(task);
+                    }}
+                    className="justify-start text-left"
+                    data-testid={`button-analyze-${task.id}`}
+                  >
+                    <Target className="h-3 w-3 mr-2" />
+                    {task.title}
+                  </Button>
+                ))}
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Task Analysis Results */}
+      {taskAnalysis && selectedTask && (
+        <Card data-testid="task-analysis-results">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Lightbulb className="h-5 w-5 text-yellow-500" />
+              Analysis: {selectedTask.title}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div>
+                <span className="text-sm text-muted-foreground">Category</span>
+                <p className="font-medium capitalize">{taskAnalysis.category}</p>
+              </div>
+              <div>
+                <span className="text-sm text-muted-foreground">Priority</span>
+                <Badge variant={getPriorityColor(taskAnalysis.priority)} className="mt-1">
+                  {taskAnalysis.priority}
+                </Badge>
+              </div>
+              <div>
+                <span className="text-sm text-muted-foreground">Est. Duration</span>
+                <p className="font-medium flex items-center gap-1">
+                  <Clock className="h-3 w-3" />
+                  {taskAnalysis.estimatedDuration}m
+                </p>
+              </div>
+              <div>
+                <Button
+                  size="sm"
+                  onClick={() => breakDownTaskMutation.mutate(selectedTask)}
+                  disabled={breakDownTaskMutation.isPending}
+                  data-testid="button-break-down-task"
+                >
+                  {breakDownTaskMutation.isPending ? "Breaking..." : "Break Down"}
+                </Button>
+              </div>
+            </div>
+            
+            <div>
+              <span className="text-sm text-muted-foreground">AI Reasoning</span>
+              <p className="text-sm mt-1 text-muted-foreground">{taskAnalysis.reasoning}</p>
+            </div>
+
+            {taskAnalysis.subtasks && taskAnalysis.subtasks.length > 0 && (
+              <div>
+                <span className="text-sm text-muted-foreground">Suggested Steps</span>
+                <ul className="list-disc list-inside text-sm mt-1 space-y-1">
+                  {taskAnalysis.subtasks.map((subtask, index) => (
+                    <li key={index}>{subtask}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Subtask Breakdown Results */}
+      {subtasks.length > 0 && selectedTask && (
+        <Card data-testid="subtask-breakdown">
+          <CardHeader>
+            <CardTitle>Break Down: {selectedTask.title}</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              {subtasks.map((subtask, index) => (
+                <div key={index} className="flex items-start gap-2 p-2 border rounded">
+                  <span className="flex-shrink-0 w-6 h-6 bg-primary/10 text-primary rounded-full flex items-center justify-center text-xs font-medium">
+                    {index + 1}
+                  </span>
+                  <span className="text-sm">{subtask}</span>
+                </div>
+              ))}
+            </div>
+            
+            <div className="flex gap-2">
+              <Button onClick={createSubtasks} data-testid="button-create-subtasks">
+                Create as Separate Tasks
+              </Button>
+              <Button variant="outline" onClick={() => setSubtasks([])}>
+                Cancel
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Task Groups Suggestions */}
+      {taskGroups.length > 0 && (
+        <Card data-testid="task-groups-suggestions">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Users className="h-5 w-5 text-green-500" />
+              Suggested Task Groups
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {taskGroups.map((group, index) => (
+              <div key={index} className="border rounded-lg p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <h4 className="font-medium">{group.groupName}</h4>
+                  <Badge variant="outline" className="flex items-center gap-1">
+                    <Clock className="h-3 w-3" />
+                    {group.estimatedTotalTime}m
+                  </Badge>
+                </div>
+                
+                <div className="space-y-2 mb-3">
+                  {group.tasks.map((taskTitle, taskIndex) => (
+                    <div key={taskIndex} className="text-sm flex items-center gap-2">
+                      <div className="w-2 h-2 bg-primary/60 rounded-full"></div>
+                      {taskTitle}
+                    </div>
+                  ))}
+                </div>
+                
+                <p className="text-sm text-muted-foreground">{group.reasoning}</p>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
+}

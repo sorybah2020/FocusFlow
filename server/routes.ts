@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { insertTaskSchema, insertFocusSessionSchema, insertNoteSchema, insertHabitSchema } from "@shared/schema";
+import { analyzeTask, suggestTaskGroups, breakDownLargeTask } from "./ai/taskAssistant";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
@@ -97,6 +98,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(204).send();
     } catch (error) {
       res.status(500).json({ message: "Failed to delete task" });
+    }
+  });
+
+  // AI Task Assistant endpoints
+  app.post("/api/ai/analyze-task", async (req, res) => {
+    try {
+      const { title, description } = req.body;
+      if (!title) {
+        return res.status(400).json({ message: "Task title is required" });
+      }
+      
+      const analysis = await analyzeTask(title, description);
+      res.json(analysis);
+    } catch (error) {
+      console.error("AI analysis error:", error);
+      res.status(500).json({ message: "Failed to analyze task" });
+    }
+  });
+
+  app.post("/api/ai/suggest-groups", async (req, res) => {
+    try {
+      const { tasks } = req.body;
+      if (!Array.isArray(tasks) || tasks.length < 2) {
+        return res.status(400).json({ message: "At least 2 tasks required for grouping" });
+      }
+      
+      const suggestions = await suggestTaskGroups(tasks);
+      res.json(suggestions);
+    } catch (error) {
+      console.error("AI grouping error:", error);
+      res.status(500).json({ message: "Failed to suggest task groups" });
+    }
+  });
+
+  app.post("/api/ai/break-down-task", async (req, res) => {
+    try {
+      const { title, description } = req.body;
+      if (!title) {
+        return res.status(400).json({ message: "Task title is required" });
+      }
+      
+      const subtasks = await breakDownLargeTask(title, description);
+      res.json({ subtasks });
+    } catch (error) {
+      console.error("AI breakdown error:", error);
+      res.status(500).json({ message: "Failed to break down task" });
     }
   });
 
