@@ -47,17 +47,7 @@ export default function FocusTimerWidget({ taskTitle, onComplete, onTaskChange }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/focus-sessions"] });
-      // Update user's focus time in localStorage
-      const savedUser = localStorage.getItem('focusflow_user');
-      if (savedUser) {
-        try {
-          const user = JSON.parse(savedUser);
-          user.totalFocusTime = (user.totalFocusTime || 0) + sessionDuration;
-          localStorage.setItem('focusflow_user', JSON.stringify(user));
-        } catch (error) {
-          console.error('Error updating user focus time:', error);
-        }
-      }
+      // Note: We'll calculate total focus time from database sessions instead of localStorage
     },
     onError: (error: any) => {
       console.error("Failed to save focus session:", error);

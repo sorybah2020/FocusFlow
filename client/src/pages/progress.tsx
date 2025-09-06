@@ -29,6 +29,9 @@ export default function ProgressPage() {
   );
   const weeklyFocusTime = weeklySessions.reduce((total, session) => total + session.duration, 0);
 
+  // Calculate total focus time from all database sessions (not localStorage)
+  const totalFocusTime = sessions.reduce((total, session) => total + session.duration, 0);
+
   // Calculate daily stats for the past week
   const dailyStats = Array.from({ length: 7 }, (_, i) => {
     const date = new Date();
@@ -113,7 +116,7 @@ export default function ProgressPage() {
               <div className="ml-4">
                 <p className="text-sm font-medium text-muted-foreground">Total Focus Time</p>
                 <p className="text-2xl font-bold text-foreground" data-testid="text-total-focus-time">
-                  {Math.floor((user?.totalFocusTime || 0) / 60)}h {(user?.totalFocusTime || 0) % 60}m
+                  {Math.floor(totalFocusTime / 60)}h {totalFocusTime % 60}m
                 </p>
               </div>
             </div>
