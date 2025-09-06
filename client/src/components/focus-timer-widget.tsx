@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -27,10 +27,17 @@ export default function FocusTimerWidget({ taskTitle, onComplete, onTaskChange }
   const [selectedTaskId, setSelectedTaskId] = useState<string>("");
   const [tempDuration, setTempDuration] = useState(25);
   const [sessionStartTime, setSessionStartTime] = useState<Date | null>(null);
+  const [sessionSaved, setSessionSaved] = useState(false);
+  const onCompleteRef = useRef(onComplete);
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { data: tasks = [] } = useQuery<Task[]>({ queryKey: ["/api/tasks"] });
+
+  // Update the ref when onComplete changes
+  useEffect(() => {
+    onCompleteRef.current = onComplete;
+  }, [onComplete]);
 
   // Mutation to save focus session to database
   const saveFocusSessionMutation = useMutation({
@@ -96,6 +103,34 @@ export default function FocusTimerWidget({ taskTitle, onComplete, onTaskChange }
     }
   };
 
+  // Handle session completion
+  const handleSessionComplete = useCallback(() => {
+    if (!sessionStartTime || sessionSaved) return;
+    
+    setIsActive(false);
+    setSessionSaved(true); // Prevent multiple submissions
+    
+    // Save the completed session to database
+    const actualDuration = Math.round((Date.now() - sessionStartTime.getTime()) / 1000 / 60); // in minutes
+    saveFocusSessionMutation.mutate({
+      duration: actualDuration,
+      taskTitle: taskTitle || "Focus Session",
+      type: "focus",
+      completedAt: new Date()
+    });
+
+    // Show notification
+    showNotification(false);
+    
+    // Show success toast
+    toast({
+      title: "Focus Session Complete! 🎯",
+      description: `Great job! You focused for ${sessionDuration} minutes.`,
+    });
+
+    onCompleteRef.current?.();
+  }, [sessionStartTime, sessionSaved, taskTitle, sessionDuration]);
+
   useEffect(() => {
     let interval: NodeJS.Timeout;
 
@@ -103,32 +138,12 @@ export default function FocusTimerWidget({ taskTitle, onComplete, onTaskChange }
       interval = setInterval(() => {
         setTimeRemaining(time => time - 1);
       }, 1000);
-    } else if (timeRemaining === 0 && sessionStartTime) {
-      setIsActive(false);
-      
-      // Save the completed session to database
-      const actualDuration = Math.round((Date.now() - sessionStartTime.getTime()) / 1000 / 60); // in minutes
-      saveFocusSessionMutation.mutate({
-        duration: actualDuration,
-        taskTitle: taskTitle || "Focus Session",
-        type: "focus",
-        completedAt: new Date()
-      });
-
-      // Show notification
-      showNotification(false);
-      
-      // Show success toast
-      toast({
-        title: "Focus Session Complete! 🎯",
-        description: `Great job! You focused for ${sessionDuration} minutes.`,
-      });
-
-      onComplete?.();
+    } else if (timeRemaining === 0 && sessionStartTime && !sessionSaved) {
+      handleSessionComplete();
     }
 
     return () => clearInterval(interval);
-  }, [isActive, timeRemaining, onComplete, sessionStartTime, sessionDuration, taskTitle, toast, saveFocusSessionMutation]);
+  }, [isActive, timeRemaining, sessionStartTime, sessionSaved, handleSessionComplete]);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -144,6 +159,7 @@ export default function FocusTimerWidget({ taskTitle, onComplete, onTaskChange }
     if (!isActive && timeRemaining === sessionDuration * 60) {
       // Starting a new session
       setSessionStartTime(new Date());
+      setSessionSaved(false); // Reset the saved flag for new session
     }
     setIsActive(!isActive);
   };
@@ -158,6 +174,8 @@ export default function FocusTimerWidget({ taskTitle, onComplete, onTaskChange }
     setSessionDuration(tempDuration);
     setTimeRemaining(tempDuration * 60);
     setIsActive(false);
+    setSessionStartTime(null);
+    setSessionSaved(false); // Reset the saved flag
     setIsSettingsDialogOpen(false);
   };
 
@@ -165,6 +183,7 @@ export default function FocusTimerWidget({ taskTitle, onComplete, onTaskChange }
     setTimeRemaining(sessionDuration * 60);
     setIsActive(false);
     setSessionStartTime(null);
+    setSessionSaved(false); // Reset the saved flag
   };
 
   const handleTaskChange = () => {
