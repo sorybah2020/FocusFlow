@@ -19,6 +19,8 @@ export default function Calendar() {
   const [viewMode, setViewMode] = useState<'month' | 'week' | 'day'>('month');
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [isViewEventDialogOpen, setIsViewEventDialogOpen] = useState(false);
+  const [isDayViewDialogOpen, setIsDayViewDialogOpen] = useState(false);
+  const [selectedDayTasks, setSelectedDayTasks] = useState<Task[]>([]);
   const [newEvent, setNewEvent] = useState({
     title: "",
     description: "",
@@ -91,7 +93,9 @@ export default function Calendar() {
   const handleDateClick = (day: number) => {
     const clickedDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
     setSelectedDate(clickedDate);
-    setIsEventDialogOpen(true);
+    const dayTasks = getTasksForDate(day);
+    setSelectedDayTasks(dayTasks);
+    setIsDayViewDialogOpen(true);
   };
 
   const handleTaskClick = (task: Task, e: React.MouseEvent) => {
@@ -350,6 +354,106 @@ export default function Calendar() {
               </Button>
             </div>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Day View Dialog - Shows all tasks for selected day */}
+      <Dialog open={isDayViewDialogOpen} onOpenChange={setIsDayViewDialogOpen}>
+        <DialogContent className="max-w-2xl" data-testid="dialog-day-view">
+          <DialogHeader>
+            <DialogTitle>
+              Tasks for {selectedDate?.toLocaleDateString('en-US', { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+              })}
+            </DialogTitle>
+            <DialogDescription>
+              View all your tasks and events for this day.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            {selectedDayTasks.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-muted-foreground mb-4">No tasks scheduled for this day</p>
+                <Button 
+                  onClick={() => {
+                    setIsDayViewDialogOpen(false);
+                    setIsEventDialogOpen(true);
+                  }}
+                  data-testid="button-add-task-for-day"
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add Task for This Day
+                </Button>
+              </div>
+            ) : (
+              <>
+                <div className="space-y-3">
+                  {selectedDayTasks.map((task) => (
+                    <div
+                      key={task.id}
+                      className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 cursor-pointer"
+                      onClick={() => {
+                        setSelectedTask(task);
+                        setIsDayViewDialogOpen(false);
+                        setIsViewEventDialogOpen(true);
+                      }}
+                      data-testid={`day-task-${task.id}`}
+                    >
+                      <div className="flex items-center space-x-3">
+                        <div
+                          className={`w-3 h-3 rounded-full ${
+                            task.completed ? 'bg-gray-400' :
+                            task.priority === 'urgent' ? 'bg-red-500' :
+                            task.priority === 'medium' ? 'bg-orange-500' : 'bg-green-500'
+                          }`}
+                        />
+                        <div>
+                          <p className={`font-medium ${task.completed ? 'line-through text-muted-foreground' : 'text-foreground'}`}>
+                            {task.title}
+                          </p>
+                          {task.description && (
+                            <p className="text-sm text-muted-foreground">{task.description}</p>
+                          )}
+                          {task.dueDate && (
+                            <p className="text-xs text-muted-foreground">
+                              {new Date(task.dueDate).toLocaleTimeString('en-US', { 
+                                hour: 'numeric', 
+                                minute: '2-digit' 
+                              })}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                      <Badge
+                        variant={
+                          task.priority === 'urgent' ? 'destructive' :
+                          task.priority === 'medium' ? 'default' : 'secondary'
+                        }
+                      >
+                        {task.priority}
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
+                <div className="flex justify-center pt-4">
+                  <Button 
+                    variant="outline"
+                    onClick={() => {
+                      setIsDayViewDialogOpen(false);
+                      setIsEventDialogOpen(true);
+                    }}
+                    data-testid="button-add-another-task"
+                  >
+                    <Plus className="mr-2 h-4 w-4" />
+                    Add Another Task
+                  </Button>
+                </div>
+              </>
+            )}
+          </div>
         </DialogContent>
       </Dialog>
 
