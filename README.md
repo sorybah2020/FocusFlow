@@ -8,10 +8,12 @@ Smart Notes - Organized note-taking with tags and search functionality
 Visual Calendar - Color-coded calendar view that makes deadlines and schedules crystal clear
 Progress Tracking - Celebration of small wins and confidence-building progress monitoring
 Habit Tracking - Build consistent study routines with daily habit monitoring
+
 🧠 ADHD-Friendly Design
 Hyperfocus Friendly - Flexible timer durations from 15 minutes to 2+ hours
 Executive Function Support - Visual cues, priority colors, and structured workflows
 Stress-Free Progress - Gentle reminders and positive reinforcement approach
+
 🛠️ Technology Stack
 Frontend:
 
