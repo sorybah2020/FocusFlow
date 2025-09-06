@@ -1,11 +1,13 @@
 import { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
 import { Pause, SkipForward, Edit, Settings } from "lucide-react";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 import type { Task } from "@shared/schema";
 
 interface FocusTimerWidgetProps {
@@ -24,8 +26,75 @@ export default function FocusTimerWidget({ taskTitle, onComplete, onTaskChange }
   const [isSettingsDialogOpen, setIsSettingsDialogOpen] = useState(false);
   const [selectedTaskId, setSelectedTaskId] = useState<string>("");
   const [tempDuration, setTempDuration] = useState(25);
+  const [sessionStartTime, setSessionStartTime] = useState<Date | null>(null);
 
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
   const { data: tasks = [] } = useQuery<Task[]>({ queryKey: ["/api/tasks"] });
+
+  // Mutation to save focus session to database
+  const saveFocusSessionMutation = useMutation({
+    mutationFn: async (sessionData: any) => {
+      const response = await apiRequest("POST", "/api/focus-sessions", sessionData);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/focus-sessions"] });
+      // Update user's focus time in localStorage
+      const savedUser = localStorage.getItem('focusflow_user');
+      if (savedUser) {
+        try {
+          const user = JSON.parse(savedUser);
+          user.totalFocusTime = (user.totalFocusTime || 0) + sessionDuration;
+          localStorage.setItem('focusflow_user', JSON.stringify(user));
+        } catch (error) {
+          console.error('Error updating user focus time:', error);
+        }
+      }
+    },
+    onError: (error: any) => {
+      console.error("Failed to save focus session:", error);
+      toast({
+        title: "Failed to save focus session",
+        description: "Your session wasn't recorded properly",
+        variant: "destructive"
+      });
+    },
+  });
+
+  // Request notification permission on component mount
+  useEffect(() => {
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
+  }, []);
+
+  // Show notification when session completes
+  const showNotification = (isBreak: boolean = false) => {
+    if ('Notification' in window && Notification.permission === 'granted') {
+      const title = isBreak ? 'Break Time Complete! 🌟' : 'Focus Session Complete! 🎯';
+      const body = isBreak 
+        ? 'Time to get back to focused work!'
+        : `Great job! You completed ${sessionDuration} minutes of focused work.`;
+      
+      const notification = new Notification(title, {
+        body,
+        icon: '/favicon.ico',
+        badge: '/favicon.ico'
+      });
+
+      // Auto close notification after 5 seconds
+      setTimeout(() => notification.close(), 5000);
+
+      // Play notification sound
+      try {
+        const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAL QAAAmr AAAEABAAAAF mVdDIAuF DQBH0XAADQAAA AQAFQACQABAEqQAAAAAB RQUAABkBAABAAQAAAAAA BBAAEAAQAEoAAoABAAqgA');
+        audio.play().catch(() => {}); // Ignore audio errors
+      } catch (error) {
+        // Ignore audio errors
+      }
+    }
+  };
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -34,13 +103,32 @@ export default function FocusTimerWidget({ taskTitle, onComplete, onTaskChange }
       interval = setInterval(() => {
         setTimeRemaining(time => time - 1);
       }, 1000);
-    } else if (timeRemaining === 0) {
+    } else if (timeRemaining === 0 && sessionStartTime) {
       setIsActive(false);
+      
+      // Save the completed session to database
+      const actualDuration = Math.round((Date.now() - sessionStartTime.getTime()) / 1000 / 60); // in minutes
+      saveFocusSessionMutation.mutate({
+        duration: actualDuration,
+        taskTitle: taskTitle || "Focus Session",
+        type: "focus",
+        completedAt: new Date()
+      });
+
+      // Show notification
+      showNotification(false);
+      
+      // Show success toast
+      toast({
+        title: "Focus Session Complete! 🎯",
+        description: `Great job! You focused for ${sessionDuration} minutes.`,
+      });
+
       onComplete?.();
     }
 
     return () => clearInterval(interval);
-  }, [isActive, timeRemaining, onComplete]);
+  }, [isActive, timeRemaining, onComplete, sessionStartTime, sessionDuration, taskTitle, toast, saveFocusSessionMutation]);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -53,6 +141,10 @@ export default function FocusTimerWidget({ taskTitle, onComplete, onTaskChange }
   const strokeDasharray = `${(progress / 100) * circumference}, ${circumference}`;
 
   const toggleTimer = () => {
+    if (!isActive && timeRemaining === sessionDuration * 60) {
+      // Starting a new session
+      setSessionStartTime(new Date());
+    }
     setIsActive(!isActive);
   };
 
@@ -72,6 +164,7 @@ export default function FocusTimerWidget({ taskTitle, onComplete, onTaskChange }
   const resetTimer = () => {
     setTimeRemaining(sessionDuration * 60);
     setIsActive(false);
+    setSessionStartTime(null);
   };
 
   const handleTaskChange = () => {
