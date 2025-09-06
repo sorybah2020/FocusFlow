@@ -114,7 +114,7 @@ export default function Login() {
               data-testid="button-replit-auth"
             >
               <Sparkles className="mr-2 h-5 w-5" />
-              {isLogin ? "Sign In with Replit" : "Sign Up with Replit"}
+              {isLogin ? "Sign In with Google Email" : "Sign Up with Google Email"}
               <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
 
