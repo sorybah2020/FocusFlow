@@ -1,7 +1,11 @@
-import OpenAI from "openai";
+import { GoogleGenAI } from "@google/genai";
 
-// the newest OpenAI model is "gpt-5" which was released August 7, 2025. do not change this unless explicitly requested by the user
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+// Follow these instructions when using this blueprint:
+// - Note that the newest Gemini model series is "gemini-2.5-flash" or gemini-2.5-pro"
+//   - do not change this unless explicitly requested by the user
+
+// This API key is from Gemini Developer API Key, not vertex AI API Key
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
 
 export interface TaskSuggestion {
   category: string;
@@ -34,14 +38,26 @@ Provide analysis in JSON format with:
 
 Focus on ADHD-friendly approaches: clear steps, realistic time estimates, and manageable chunks.`;
 
-    const response = await openai.chat.completions.create({
-      model: "gpt-5",
-      messages: [{ role: "user", content: prompt }],
-      response_format: { type: "json_object" },
-      max_tokens: 500,
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: "object",
+          properties: {
+            category: { type: "string" },
+            priority: { type: "string" },
+            estimatedDuration: { type: "number" },
+            subtasks: { type: "array", items: { type: "string" } },
+            reasoning: { type: "string" },
+          },
+          required: ["category", "priority", "estimatedDuration", "reasoning"],
+        },
+      },
+      contents: prompt,
     });
 
-    const result = JSON.parse(response.choices[0].message.content || "{}");
+    const result = JSON.parse(response.text || "{}");
     return {
       category: result.category || "personal",
       priority: result.priority || "medium",
@@ -91,14 +107,34 @@ Provide 2-3 grouping suggestions in JSON format:
 
 Consider ADHD challenges: context switching difficulty, energy management, and hyperfocus opportunities.`;
 
-    const response = await openai.chat.completions.create({
-      model: "gpt-5",
-      messages: [{ role: "user", content: prompt }],
-      response_format: { type: "json_object" },
-      max_tokens: 800,
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-pro",
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: "object",
+          properties: {
+            groups: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  groupName: { type: "string" },
+                  tasks: { type: "array", items: { type: "string" } },
+                  reasoning: { type: "string" },
+                  estimatedTotalTime: { type: "number" }
+                },
+                required: ["groupName", "tasks", "reasoning", "estimatedTotalTime"]
+              }
+            }
+          },
+          required: ["groups"]
+        },
+      },
+      contents: prompt,
     });
 
-    const result = JSON.parse(response.choices[0].message.content || "{}");
+    const result = JSON.parse(response.text || "{}");
     return result.groups || [];
   } catch (error) {
     console.error("AI task grouping error:", error);
@@ -121,14 +157,25 @@ Provide a JSON array of specific steps that are:
 
 Format: {"steps": ["step 1", "step 2", ...]}`;
 
-    const response = await openai.chat.completions.create({
-      model: "gpt-5",
-      messages: [{ role: "user", content: prompt }],
-      response_format: { type: "json_object" },
-      max_tokens: 400,
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-pro",
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: "object",
+          properties: {
+            steps: {
+              type: "array",
+              items: { type: "string" }
+            }
+          },
+          required: ["steps"]
+        },
+      },
+      contents: prompt,
     });
 
-    const result = JSON.parse(response.choices[0].message.content || "{}");
+    const result = JSON.parse(response.text || "{}");
     return result.steps || [];
   } catch (error) {
     console.error("AI task breakdown error:", error);
