@@ -132,6 +132,69 @@ Format: {"steps": ["step 1", "step 2", ...]}`;
     return result.steps || [];
   } catch (error) {
     console.error("AI task breakdown error:", error);
-    return [];
+    
+    // Provide ADHD-friendly fallback breakdowns based on task type
+    return generateFallbackBreakdown(title, description);
   }
+}
+
+function generateFallbackBreakdown(title: string, description?: string): string[] {
+  const titleLower = title.toLowerCase();
+  
+  // Coding/Programming tasks
+  if (titleLower.includes('code') || titleLower.includes('program') || titleLower.includes('develop') || titleLower.includes('project')) {
+    return [
+      "Set up development environment and open project files",
+      "Review requirements and break down into small features",
+      "Implement first small feature or function",
+      "Test the implemented feature",
+      "Add documentation and clean up code",
+      "Commit changes and plan next steps"
+    ];
+  }
+  
+  // Study/Research tasks
+  if (titleLower.includes('study') || titleLower.includes('research') || titleLower.includes('learn') || titleLower.includes('read')) {
+    return [
+      "Gather all materials and create a quiet study space",
+      "Create an outline of topics to cover",
+      "Study first section for 25 minutes with notes",
+      "Take a 5-minute break and review notes",
+      "Study second section and make connections",
+      "Summarize key points and create review cards"
+    ];
+  }
+  
+  // Writing tasks
+  if (titleLower.includes('write') || titleLower.includes('essay') || titleLower.includes('report') || titleLower.includes('paper')) {
+    return [
+      "Brainstorm ideas and create a rough outline",
+      "Research and gather supporting materials",
+      "Write the introduction paragraph",
+      "Draft the main body sections",
+      "Write conclusion and review overall flow",
+      "Edit for clarity and check formatting"
+    ];
+  }
+  
+  // Assignment/Homework tasks
+  if (titleLower.includes('assignment') || titleLower.includes('homework') || titleLower.includes('exercise')) {
+    return [
+      "Read assignment instructions carefully",
+      "Gather all required materials and resources",
+      "Break the assignment into smaller questions/parts",
+      "Complete first part and check work",
+      "Complete remaining parts one by one",
+      "Review entire assignment before submitting"
+    ];
+  }
+  
+  // Generic task breakdown
+  return [
+    "Gather all materials and information needed",
+    "Break the task into smaller, specific steps", 
+    "Complete first step and mark progress",
+    "Work on remaining steps one at a time",
+    "Review and finalize the completed work"
+  ];
 }
